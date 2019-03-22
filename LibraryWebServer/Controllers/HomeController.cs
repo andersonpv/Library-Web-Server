@@ -100,18 +100,19 @@ namespace LibraryWebServer.Controllers
                       t.Isbn,
                       t.Title,
                       t.Author,
-                      Serial = from i in db.Inventory
-                               where i.Isbn == t.Isbn
+                      Serial = from i in t.Inventory
                                select i.Serial,
-                      Name =
-                             from n in db.CheckedOut
-                             join p in db.Patrons
-                                   on n.CardNum equals p.CardNum
-
-                             select p.Name
-
-
-
+                      Name = from compound in 
+                             (
+                               from p in db.Patrons
+                               join c in db.CheckedOut
+                               on p.CardNum equals c.CardNum
+                               select new { c.Serial, p.Name }
+                             )
+                             join item in db.Inventory
+                             on compound.Serial equals item.Serial
+                             where item.Isbn == t.Isbn
+                             select compound.Name
                     };
 
         return Json(query.ToArray());
