@@ -17,7 +17,7 @@ namespace LibraryWebServer.Controllers
     // This will only allow one user of the web server at a time (aside from major security concerns).
     private static string user = "";
     private static int card = -1;
-
+    
     /// <summary>
     /// Given a Patron name and CardNum, verify that they exist and match in the database.
     /// If the login is successful, sets the global variables "user" and "card"
@@ -35,35 +35,35 @@ namespace LibraryWebServer.Controllers
       // TODO: Fill in. Determine if login is successful or not.
       using (Team56LibraryContext db = new Team56LibraryContext())
       {
-          var query = from t in db.Patrons
-                      select new
-                      {
-                          t.Name,
-                          t.CardNum
-                      };
-
-          foreach(var v in query)
-                {
-                    if(v.Name == name && v.CardNum == cardnum)
+        var query = from t in db.Patrons
+                    select new
                     {
-                        loginSuccessful = true;
-                    }
-                }          
+                      t.Name,
+                      t.CardNum
+                    };
+
+        foreach (var v in query)
+        {
+          if (v.Name == name && v.CardNum == cardnum)
+          {
+            loginSuccessful = true;
+          }
+        }
       }
 
-      
-      if(!loginSuccessful)
+
+      if (!loginSuccessful)
       {
         return Json(new { success = false });
       }
       else
-      { 
+      {
         user = name;
         card = cardnum;
         return Json(new { success = true });
       }
     }
-  
+
 
     /// <summary>
     /// Logs a user out. This is implemented for you.
@@ -91,31 +91,32 @@ namespace LibraryWebServer.Controllers
     public ActionResult AllTitles()
     {
 
-       // TODO: Implement
-       using (Team56LibraryContext db = new Team56LibraryContext())
-       {
-                var query = from t in db.Titles
-                            select new
-                            {
-                                t.Isbn,
-                                t.Title,
-                                t.Author,
-                                Serial = from i in t.Inventory
-                                         select new { i.Serial },
-                                Name = 
-                                     from n in db.CheckedOut
-                                      join p in db.Patrons
-                                    on n.CardNum equals p.CardNum
-                                    
-                                      select p.Name
+      // TODO: Implement
+      using (Team56LibraryContext db = new Team56LibraryContext())
+      {
+        var query = from t in db.Titles
+                    select new
+                    {
+                      t.Isbn,
+                      t.Title,
+                      t.Author,
+                      Serial = from i in db.Inventory
+                               where i.Isbn == t.Isbn
+                               select i.Serial,
+                      Name =
+                             from n in db.CheckedOut
+                             join p in db.Patrons
+                                   on n.CardNum equals p.CardNum
 
-                                
-                                       
-                            };
-                
-                return Json(query.ToArray());
-       }
-                //return Json(null);
+                             select p.Name
+
+
+
+                    };
+
+        return Json(query.ToArray());
+      }
+      //return Json(null);
 
     }
 
@@ -147,18 +148,18 @@ namespace LibraryWebServer.Controllers
     public ActionResult CheckOutBook(int serial)
     {
       // You may have to cast serial to a (uint)
-      using(Team56LibraryContext db = new Team56LibraryContext())
-            {
+      using (Team56LibraryContext db = new Team56LibraryContext())
+      {
 
-                CheckedOut book = new CheckedOut();
-                book.CardNum = (uint)card;
-                book.Serial = (uint)serial;
-                db.CheckedOut.Add(book);
-                db.SaveChanges();
-                //
-            }
+        CheckedOut book = new CheckedOut();
+        book.CardNum = (uint)card;
+        book.Serial = (uint)serial;
+        db.CheckedOut.Add(book);
+        db.SaveChanges();
+        //
+      }
 
-        return Json(new { success = true });
+      return Json(new { success = true });
     }
 
 
@@ -176,7 +177,7 @@ namespace LibraryWebServer.Controllers
 
       return Json(new { success = true });
     }
-    
+
     /*******************************************/
     /****** Do not modify below this line ******/
     /*******************************************/
@@ -187,7 +188,7 @@ namespace LibraryWebServer.Controllers
     /// <returns></returns>
     public IActionResult Index()
     {
-      if(user == "" && card == -1)
+      if (user == "" && card == -1)
         return View("Login");
 
       return View();
@@ -224,13 +225,13 @@ namespace LibraryWebServer.Controllers
     {
       user = "";
       card = -1;
-      
+
       ViewData["Message"] = "Please login.";
 
       return View();
     }
 
-    
+
     /// <summary>
     /// Return the Contact page.
     /// </summary>
