@@ -133,7 +133,29 @@ namespace LibraryWebServer.Controllers
     public ActionResult ListMyBooks()
     {
       // TODO: Implement
-      return Json(null);
+      using (Team56LibraryContext db = new Team56LibraryContext())
+      {
+        var query = from c in db.CheckedOut
+                    where c.CardNum == card
+                    select new
+                    {
+                      c.Serial,
+                      Title = from compound in 
+                                (
+                                  from i in db.Inventory
+                                  join t in db.Titles
+                                  on i.Isbn equals t.Isbn
+                                  select new { t.Title, i.Serial }
+                                )
+                                join e in db.CheckedOut
+                                on compound.Serial equals e.Serial
+                              where e.CardNum == card 
+                              && e.Serial == c.Serial
+                              select compound.Title
+                    };
+
+        return Json(query.ToArray());
+      }
     }
 
 
